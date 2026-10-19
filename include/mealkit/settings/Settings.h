@@ -15,6 +15,9 @@ class Renderer;
 namespace audio {
 class Engine;
 }
+namespace feedback {
+class Player;
+}
 namespace loc {
 class Strings;
 }
@@ -69,6 +72,10 @@ MEALKIT_STRUCT(GameplaySettings) {
     MEALKIT_FIELD(std::string, language, {}, "Language (empty is the project default)");
     MEALKIT_FIELD(f32, uiScale, 1.0f, "Interface scale");
     MEALKIT_FIELD(bool, subtitles, true, "Subtitles");
+    // 접근성: 연출 표의 흔들림·번쩍임(화면 색)·화면 정지를 줄이거나 끈다 (화면만, 시뮬레이션과 무관)
+    MEALKIT_FIELD(f32, shakeScale, 1.0f, "Screen shake");
+    MEALKIT_FIELD(f32, flashScale, 1.0f, "Screen flashes");
+    MEALKIT_FIELD(bool, hitStop, true, "Hit stop (brief screen freeze)");
     MEALKIT_FIELD(bool, showNetwork, true, "Show network status (ping, waiting for a player)");
 };
 
@@ -91,6 +98,7 @@ public:
         render::Renderer* renderer = nullptr;
         FrameLimiter* limiter = nullptr;
         audio::Engine* audio = nullptr;
+        feedback::Player* feedback = nullptr; // 접근성 배율 (흔들림·번쩍임·화면 정지)
         loc::Strings* strings = nullptr;
         ui::System* ui = nullptr;
         input::Actions* actions = nullptr;

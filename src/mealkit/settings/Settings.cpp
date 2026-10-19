@@ -3,6 +3,7 @@
 #include "mealkit/audio/Audio.h"
 #include "mealkit/core/Clock.h"
 #include "mealkit/core/Log.h"
+#include "mealkit/feedback/Feedback.h"
 #include "mealkit/input/Actions.h"
 #include "mealkit/loc/Strings.h"
 #include "mealkit/platform/Input.h"
@@ -81,6 +82,9 @@ const RowDef kGameplayRows[] = {
     {"gameplay.language", RowKind::Choice},
     {"gameplay.uiScale", RowKind::Slider, 0.5f, 2.0f, 0.05f, true},
     {"gameplay.subtitles", RowKind::Toggle},
+    {"gameplay.shakeScale", RowKind::Slider, 0.0f, 1.0f, 0.05f, true},
+    {"gameplay.flashScale", RowKind::Slider, 0.0f, 1.0f, 0.05f, true},
+    {"gameplay.hitStop", RowKind::Toggle},
     {"gameplay.showNetwork", RowKind::Toggle},
 };
 constexpr u32 kFpsChoices[] = {0, 30, 60, 120, 144, 240};
@@ -142,6 +146,7 @@ struct Service::Impl {
             if (lang != t.strings->language()) t.strings->load(lang, t.projectLanguage);
         }
         if (t.ui) t.ui->setScale(g.uiScale);
+        if (t.feedback) t.feedback->setAccessibility(g.shakeScale, g.flashScale, g.hitStop);
         const ControlSettings& c = value.controls;
         if (t.actions) t.actions->setLookSettings(c.mouseSensitivity, c.padSensitivity, c.invertY, c.padInvertY);
         applied = value;
