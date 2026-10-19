@@ -81,6 +81,7 @@ const RowDef kGameplayRows[] = {
     {"gameplay.language", RowKind::Choice},
     {"gameplay.uiScale", RowKind::Slider, 0.5f, 2.0f, 0.05f, true},
     {"gameplay.subtitles", RowKind::Toggle},
+    {"gameplay.showNetwork", RowKind::Toggle},
 };
 constexpr u32 kFpsChoices[] = {0, 30, 60, 120, 144, 240};
 

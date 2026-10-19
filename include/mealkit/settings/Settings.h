@@ -69,6 +69,7 @@ MEALKIT_STRUCT(GameplaySettings) {
     MEALKIT_FIELD(std::string, language, {}, "Language (empty is the project default)");
     MEALKIT_FIELD(f32, uiScale, 1.0f, "Interface scale");
     MEALKIT_FIELD(bool, subtitles, true, "Subtitles");
+    MEALKIT_FIELD(bool, showNetwork, true, "Show network status (ping, waiting for a player)");
 };
 
 MEALKIT_STRUCT(Settings) {
