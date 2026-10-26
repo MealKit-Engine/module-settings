@@ -155,7 +155,7 @@ struct Service::Impl {
     void save() {
         if (file.empty()) return;
         createDirectories(parentDirectory(file));
-        if (!reflect::saveTextFile(reflect::typeOf<Settings>(), &value, file, "# MealKit player settings (the game's settings screen writes this)"))
+        if (!reflect::saveTextFile(reflect::typeOf<Settings>(), &value, file, text::kSettings, "MealKit player settings (the game's settings screen writes this)"))
             MEALKIT_WARN("Settings: cannot write %s", file.c_str());
     }
 
@@ -417,7 +417,7 @@ void Service::init(const Targets& targets, const std::string& filePath) {
     m->value = {};
     if (!filePath.empty() && fileExists(filePath)) {
         std::string error;
-        if (!reflect::loadTextFile(reflect::typeOf<Settings>(), &m->value, filePath, &error))
+        if (!reflect::loadTextFile(reflect::typeOf<Settings>(), &m->value, filePath, text::kSettings, &error))
             MEALKIT_WARN("Settings: %s: %s", filePath.c_str(), error.c_str());
     }
     m->applied = m->value;
