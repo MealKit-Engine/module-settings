@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
+#include <string_view>
 
 namespace mealkit::settings {
 
@@ -341,7 +342,7 @@ struct Service::Impl {
         vm.confirmText = t.strings ? t.strings->format("settings.confirm", {{"seconds", std::to_string(static_cast<int>(std::ceil(confirmLeft)))}}) : "";
     }
 
-    void readRow(u32 index, const std::string& field) { // 위젯이 vm에 쓴 값 → 설정
+    void readRow(u32 index, const std::string& field, bool dragging) { // 위젯이 vm에 쓴 값 → 설정
         if (index >= rows.size()) return;
         const Row& r = rows[index];
         const SettingsRowVm& row = vm.rows[index];
@@ -353,6 +354,8 @@ struct Service::Impl {
             f32 x = r.def.min + row.value01 * (r.def.max - r.def.min);
             if (r.def.step > 0) x = r.def.min + std::round((x - r.def.min) / r.def.step) * r.def.step;
             *static_cast<f32*>(data) = std::clamp(x, r.def.min, r.def.max);
+            // UI 배율은 끄는 동안 숫자만 바꾸고 놓을 때 적용한다 (바로 적용하면 슬라이더가 마우스 아래에서 움직여 깜빡인다)
+            if (dragging && std::string_view(r.def.path) == "gameplay.uiScale") return;
         }
         change();
     }
@@ -383,7 +386,7 @@ struct Service::Impl {
             rebinding = -1;
             buildRows();
         } else if (a.name == "settings.changed") {
-            readRow(index, a.field);
+            readRow(index, a.field, a.dragging);
         } else if ((a.name == "settings.prev" || a.name == "settings.next") && index < rows.size()) {
             setChoice(rows[index], choiceIndex(rows[index]) + (a.name == "settings.next" ? 1 : -1));
         } else if (a.name == "settings.rebind" && index < rows.size() && rows[index].def.kind == RowKind::Key) {
