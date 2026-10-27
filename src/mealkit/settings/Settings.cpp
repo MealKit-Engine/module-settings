@@ -133,6 +133,7 @@ struct Service::Impl {
             t.window->setMode(static_cast<WindowMode>(d.windowMode), d.width, d.height);
         if (t.renderer) {
             t.renderer->setVsync(d.vsync);
+            t.renderer->setRenderScale(d.renderScale); // 동적 해상도의 위 한계
             render::PostOptions post;
             post.bloom = d.bloom;
             post.antiAliasing = d.antiAliasing;
