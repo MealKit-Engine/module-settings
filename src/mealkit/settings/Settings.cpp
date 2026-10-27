@@ -66,6 +66,10 @@ const RowDef kDisplayRows[] = {
     {"display.preset", RowKind::Choice},
     {"display.fov", RowKind::Slider, 50.0f, 110.0f, 1.0f},
     {"display.brightness", RowKind::Slider, 0.5f, 1.5f, 0.05f, true},
+    {"display.bloom", RowKind::Toggle},
+    {"display.antiAliasing", RowKind::Toggle},
+    {"display.filmGrain", RowKind::Toggle},
+    {"display.chromaticAberration", RowKind::Toggle},
 };
 const RowDef kAudioRows[] = {
     {"audio.master", RowKind::Slider, 0, 1, 0.05f, true}, {"audio.music", RowKind::Slider, 0, 1, 0.05f, true},
@@ -86,6 +90,7 @@ const RowDef kGameplayRows[] = {
     {"gameplay.flashScale", RowKind::Slider, 0.0f, 1.0f, 0.05f, true},
     {"gameplay.hitStop", RowKind::Toggle},
     {"gameplay.showNetwork", RowKind::Toggle},
+    {"gameplay.colorBlind", RowKind::Choice},
 };
 constexpr u32 kFpsChoices[] = {0, 30, 60, 120, 144, 240};
 
@@ -126,7 +131,17 @@ struct Service::Impl {
         if (t.window && (force || d.windowMode != applied.display.windowMode || d.width != applied.display.width ||
                          d.height != applied.display.height))
             t.window->setMode(static_cast<WindowMode>(d.windowMode), d.width, d.height);
-        if (t.renderer) t.renderer->setVsync(d.vsync);
+        if (t.renderer) {
+            t.renderer->setVsync(d.vsync);
+            render::PostOptions post;
+            post.bloom = d.bloom;
+            post.antiAliasing = d.antiAliasing;
+            post.filmGrain = d.filmGrain;
+            post.chromaticAberration = d.chromaticAberration;
+            post.brightness = d.brightness;
+            post.colorBlind = static_cast<render::ColorBlindMode>(value.gameplay.colorBlind);
+            t.renderer->setPostOptions(post);
+        }
         if (t.limiter) t.limiter->setTargetFps(static_cast<f64>(d.fpsLimit));
     }
 

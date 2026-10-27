@@ -50,7 +50,14 @@ MEALKIT_STRUCT(DisplaySettings) {
     MEALKIT_FIELD(GraphicsPreset, preset, GraphicsPreset::Low, "Graphics preset");
     MEALKIT_FIELD(f32, fov, 60.0f, "Field of view (degrees)");
     MEALKIT_FIELD(f32, brightness, 1.0f, "Brightness");
+    // 포스트 효과 끄기 (render::PostOptions, 씬의 값보다 먼저)
+    MEALKIT_FIELD(bool, bloom, true, "Bloom");
+    MEALKIT_FIELD(bool, antiAliasing, true, "Anti-aliasing (FXAA)");
+    MEALKIT_FIELD(bool, filmGrain, true, "Film grain");
+    MEALKIT_FIELD(bool, chromaticAberration, true, "Chromatic aberration");
 };
+
+MEALKIT_ENUM(ColorBlindSetting, u8, Off, Protanopia, Deuteranopia, Tritanopia); // render::ColorBlindMode 순서
 
 MEALKIT_STRUCT(AudioSettings) {
     MEALKIT_FIELD(f32, master, 1.0f, "Master volume");
@@ -77,6 +84,7 @@ MEALKIT_STRUCT(GameplaySettings) {
     MEALKIT_FIELD(f32, flashScale, 1.0f, "Screen flashes");
     MEALKIT_FIELD(bool, hitStop, true, "Hit stop (brief screen freeze)");
     MEALKIT_FIELD(bool, showNetwork, true, "Show network status (ping, waiting for a player)");
+    MEALKIT_FIELD(ColorBlindSetting, colorBlind, ColorBlindSetting::Off, "Color blindness correction"); // 화면 색 LUT
 };
 
 MEALKIT_STRUCT(Settings) {
