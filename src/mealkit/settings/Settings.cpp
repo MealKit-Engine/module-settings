@@ -19,7 +19,7 @@
 
 namespace mealkit::settings {
 
-// 표준 설정 화면의 뷰 모델 (assets/ui/settings.ui가 바인딩한다)
+// View model of the standard settings screen (bound by assets/ui/settings.ui)
 MEALKIT_STRUCT(SettingsTabVm) {
     MEALKIT_FIELD(std::string, label, {}, "Name");
     MEALKIT_FIELD(bool, active, false, "Selected");
@@ -49,7 +49,7 @@ namespace {
 enum class RowKind : u8 { Toggle, Slider, Choice, Key };
 
 struct RowDef {
-    const char* path; // 설정 경로 ("display.vsync"), 해상도는 "display.resolution"
+    const char* path; // settings path ("display.vsync"), resolution is "display.resolution"
     RowKind kind;
     f32 min = 0, max = 1, step = 0.05f;
     bool percent = false;
@@ -97,7 +97,7 @@ constexpr u32 kFpsChoices[] = {0, 30, 60, 120, 144, 240};
 
 struct Row {
     RowDef def;
-    i32 action = -1; // 키 줄: 입력 액션 번호
+    i32 action = -1; // key rows: input action index
 };
 
 } // namespace
@@ -111,11 +111,11 @@ struct Service::Impl {
     SettingsVm vm;
     int tab = 0;
     std::vector<Row> rows;
-    // 화면 변경 확인
+    // Display change confirmation
     bool confirming = false;
     f64 confirmLeft = 0.0;
     DisplaySettings previousDisplay;
-    i32 rebinding = -1; // 키를 기다리는 줄
+    i32 rebinding = -1; // row waiting for a key
 
     const std::string& str(const std::string& key) const {
         static const std::string empty;
@@ -125,7 +125,7 @@ struct Service::Impl {
         return t.strings && t.strings->has(key) ? t.strings->get(key) : fallback;
     }
 
-    // ---------------------------------------------------------------- 적용·저장
+    // ---------------------------------------------------------------- Apply/save
 
     void applyDisplay(bool force) {
         const DisplaySettings& d = value.display;
@@ -134,7 +134,7 @@ struct Service::Impl {
             t.window->setMode(static_cast<WindowMode>(d.windowMode), d.width, d.height);
         if (t.renderer) {
             t.renderer->setVsync(d.vsync);
-            t.renderer->setRenderScale(d.renderScale); // 동적 해상도의 위 한계
+            t.renderer->setRenderScale(d.renderScale); // upper limit of dynamic resolution
             render::PostOptions post;
             post.bloom = d.bloom;
             post.antiAliasing = d.antiAliasing;
@@ -188,7 +188,7 @@ struct Service::Impl {
         save();
     }
 
-    // ---------------------------------------------------------------- 줄
+    // ---------------------------------------------------------------- Rows
 
     void buildRows() {
         rows.clear();
@@ -312,7 +312,7 @@ struct Service::Impl {
                 const std::string& id = t.actions->id(static_cast<u32>(r.action));
                 row.label = label("action." + id, a.label.empty() ? id : a.label);
                 row.value = rebinding == static_cast<i32>(i) ? str("settings.keys.press") : keysText(a);
-                for (u32 j = 0; j < t.actions->count(); ++j) // 같은 키를 쓰는 다른 버튼 액션
+                for (u32 j = 0; j < t.actions->count(); ++j) // other button actions using the same key
                     if (static_cast<i32>(j) != r.action && !a.keys.empty() && t.actions->binding(j).keys == a.keys &&
                         t.actions->binding(j).kind == input::ActionKind::Button && t.actions->id(j).rfind("ui.", 0) != 0)
                         row.warning = true;
@@ -342,7 +342,7 @@ struct Service::Impl {
         vm.confirmText = t.strings ? t.strings->format("settings.confirm", {{"seconds", std::to_string(static_cast<int>(std::ceil(confirmLeft)))}}) : "";
     }
 
-    void readRow(u32 index, const std::string& field, bool dragging) { // 위젯이 vm에 쓴 값 → 설정
+    void readRow(u32 index, const std::string& field, bool dragging) { // value written to vm by a widget → settings
         if (index >= rows.size()) return;
         const Row& r = rows[index];
         const SettingsRowVm& row = vm.rows[index];
@@ -354,7 +354,7 @@ struct Service::Impl {
             f32 x = r.def.min + row.value01 * (r.def.max - r.def.min);
             if (r.def.step > 0) x = r.def.min + std::round((x - r.def.min) / r.def.step) * r.def.step;
             *static_cast<f32*>(data) = std::clamp(x, r.def.min, r.def.max);
-            // UI 배율은 끄는 동안 숫자만 바꾸고 놓을 때 적용한다 (바로 적용하면 슬라이더가 마우스 아래에서 움직여 깜빡인다)
+            // UI scale only changes the number while dragging and applies on release (applying immediately would move the slider under the mouse and flicker)
             if (dragging && std::string_view(r.def.path) == "gameplay.uiScale") return;
         }
         change();
@@ -463,13 +463,13 @@ void Service::update(const Input* input, f64 dt) {
     }
     if (m->confirming) {
         m->confirmLeft -= dt;
-        if (m->confirmLeft <= 0.0) m->revert(); // 확인하지 않으면 되돌린다
+        if (m->confirmLeft <= 0.0) m->revert(); // reverted if not confirmed
     }
-    // 키 바꾸기: 다음에 누른 키 (Esc는 취소)
+    // Key rebinding: the next key pressed (Esc cancels)
     if (m->rebinding >= 0 && input && m->t.actions && static_cast<size_t>(m->rebinding) < m->rows.size()) {
         for (u32 vk = 1; vk < 256; ++vk) {
             if (!input->keyPressed(static_cast<u8>(vk))) continue;
-            if (vk == key::Escape || vk == key::Enter) break; // 메뉴 키는 바꾸지 않는다
+            if (vk == key::Escape || vk == key::Enter) break; // menu keys aren't rebound
             const char* name = input::keyName(static_cast<u8>(vk));
             if (!name) continue;
             const u32 index = static_cast<u32>(m->rows[static_cast<size_t>(m->rebinding)].action);
