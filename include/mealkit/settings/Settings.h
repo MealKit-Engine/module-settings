@@ -84,6 +84,7 @@ MEALKIT_STRUCT(GameplaySettings) {
     MEALKIT_FIELD(f32, flashScale, 1.0f, "Screen flashes");
     MEALKIT_FIELD(bool, hitStop, true, "Hit stop (brief screen freeze)");
     MEALKIT_FIELD(bool, showNetwork, true, "Show network status (ping, waiting for a player)");
+    MEALKIT_FIELD(bool, crossplay, true, "Crossplay (play with other operating systems)");
     MEALKIT_FIELD(ColorBlindSetting, colorBlind, ColorBlindSetting::Off, "Color blindness correction"); // screen color LUT
 };
 
