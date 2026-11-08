@@ -2,10 +2,11 @@
 # requires: modules this folder may include besides the kernel (core, platform, jobs), as name minVersion.
 @format engine-module 1
 name settings
-version 0.1.1
+version 0.1.2
 kernel 0.9
 kind view
 layer framework
-requires audio 0.1 feedback 0.1 input 0.1 loc 0.1 render 0.1 ui 0.1
+requires feedback 0.1 input 0.1 loc 0.1 render 0.1 ui 0.1
+optional audio 0.1
 tag settings
 summary Player settings and the standard settings screen

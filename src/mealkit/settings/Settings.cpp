@@ -1,6 +1,8 @@
 #include "mealkit/settings/Settings.h"
 
+#if MEALKIT_HAS_AUDIO
 #include "mealkit/audio/Audio.h"
+#endif
 #include "mealkit/core/Clock.h"
 #include "mealkit/core/Log.h"
 #include "mealkit/feedback/Feedback.h"
@@ -149,6 +151,7 @@ struct Service::Impl {
 
     void apply(bool force) {
         applyDisplay(force);
+#if MEALKIT_HAS_AUDIO
         const AudioSettings& a = value.audio;
         if (t.audio) {
             t.audio->setBusVolume("master", a.master);
@@ -157,6 +160,7 @@ struct Service::Impl {
             t.audio->setBusVolume("ui", a.ui);
             t.audio->setBusVolume("voice", a.voice);
         }
+#endif
         const GameplaySettings& g = value.gameplay;
         if (t.strings) {
             const std::string lang = g.language.empty() ? t.projectLanguage : g.language;
