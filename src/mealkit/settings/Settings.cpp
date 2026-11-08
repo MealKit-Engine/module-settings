@@ -57,8 +57,13 @@ struct RowDef {
     bool percent = false;
 };
 
-constexpr const char* kTabs[] = {"display", "audio", "controls", "keys", "gameplay"};
-constexpr int kKeysTab = 3;
+constexpr const char* kTabs[] = {"display", "audio", "controls", "keys", "gameplay"}; // tab ids (the switches below)
+// Tabs shown, in order: builds without the audio module have no volume tab (nothing to set)
+#if MEALKIT_HAS_AUDIO
+constexpr int kShownTabs[] = {0, 1, 2, 3, 4};
+#else
+constexpr int kShownTabs[] = {0, 2, 3, 4};
+#endif
 
 const RowDef kDisplayRows[] = {
     {"display.windowMode", RowKind::Choice},
@@ -199,7 +204,7 @@ struct Service::Impl {
         auto add = [&](const RowDef* defs, size_t n) {
             for (size_t i = 0; i < n; ++i) rows.push_back({defs[i], -1});
         };
-        switch (tab) {
+        switch (kShownTabs[tab]) {
         case 0: add(kDisplayRows, std::size(kDisplayRows)); break;
         case 1: add(kAudioRows, std::size(kAudioRows)); break;
         case 2: add(kControlRows, std::size(kControlRows)); break;
@@ -297,9 +302,9 @@ struct Service::Impl {
     }
 
     void fillVm() {
-        vm.tabsCount = static_cast<u32>(std::size(kTabs));
+        vm.tabsCount = static_cast<u32>(std::size(kShownTabs));
         for (u32 i = 0; i < vm.tabsCount; ++i) {
-            vm.tabs[i].label = str(std::string("settings.tab.") + kTabs[i]);
+            vm.tabs[i].label = str(std::string("settings.tab.") + kTabs[kShownTabs[i]]);
             vm.tabs[i].active = static_cast<int>(i) == tab;
         }
         vm.rowsCount = static_cast<u32>(std::min<size_t>(rows.size(), vm.rows.size()));
@@ -366,7 +371,7 @@ struct Service::Impl {
 
     void resetTab() {
         const Settings defaults;
-        switch (tab) {
+        switch (kShownTabs[tab]) {
         case 0: value.display = defaults.display; break;
         case 1: value.audio = defaults.audio; break;
         case 2: value.controls = defaults.controls; break;
@@ -386,7 +391,7 @@ struct Service::Impl {
         if (a.name == "settings.close") {
             closeScreen();
         } else if (a.name == "settings.tab" && a.listIndex >= 0) {
-            tab = std::clamp(a.listIndex, 0, static_cast<int>(std::size(kTabs)) - 1);
+            tab = std::clamp(a.listIndex, 0, static_cast<int>(std::size(kShownTabs)) - 1);
             rebinding = -1;
             buildRows();
         } else if (a.name == "settings.changed") {
