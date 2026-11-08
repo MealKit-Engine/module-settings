@@ -1,4 +1,4 @@
-# MealKit-Settings
+# module-settings
 
 > **Beta.** MealKit is in beta: interfaces may still change between minor versions.
 
