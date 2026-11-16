@@ -2,8 +2,10 @@
 
 #include "mealkit/core/Reflect.h"
 #include "mealkit/core/Types.h"
+#include "mealkit/platform/Window.h"
 
 #include <string>
+#include <vector>
 
 namespace mealkit {
 class Input;
@@ -128,6 +130,18 @@ public:
     void open();  // standard settings screen
     void close();
     bool isOpen() const;
+
+    // For a game that draws its own settings window instead of the standard screen (the same behaviour as that screen)
+    std::vector<DisplaySize> displaySizes() const; // the window's monitor sizes; empty in editor play (no window is changed)
+    bool confirming() const;                       // a display size/mode change waits for keep() or revert()
+    f64 confirmSecondsLeft() const;                // reverts by itself at 0
+    void keep();
+    void revert();
+    // The next key pressed becomes input action `action`'s key (input::Actions index; Esc and Enter cancel), saved to
+    // the player's bindings. -1: none waiting
+    void rebind(i32 action);
+    i32 rebindingAction() const;
+    void resetKeys(); // every action back to the project's bindings
     // Every frame (after ui.update, before game update): settings screen actions, key rebinding input, confirmation timer
     void update(const Input* input, f64 dt);
 

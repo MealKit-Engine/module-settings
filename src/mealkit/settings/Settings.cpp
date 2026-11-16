@@ -122,7 +122,7 @@ struct Service::Impl {
     bool confirming = false;
     f64 confirmLeft = 0.0;
     DisplaySettings previousDisplay;
-    i32 rebinding = -1; // row waiting for a key
+    i32 rebinding = -1; // input action waiting for a key
 
     const std::string& str(const std::string& key) const {
         static const std::string empty;
@@ -320,7 +320,7 @@ struct Service::Impl {
                 const input::Action& a = t.actions->binding(static_cast<u32>(r.action));
                 const std::string& id = t.actions->id(static_cast<u32>(r.action));
                 row.label = label("action." + id, a.label.empty() ? id : a.label);
-                row.value = rebinding == static_cast<i32>(i) ? str("settings.keys.press") : keysText(a);
+                row.value = rebinding == r.action ? str("settings.keys.press") : keysText(a);
                 for (u32 j = 0; j < t.actions->count(); ++j) // other button actions using the same key
                     if (static_cast<i32>(j) != r.action && !a.keys.empty() && t.actions->binding(j).keys == a.keys &&
                         t.actions->binding(j).kind == input::ActionKind::Button && t.actions->id(j).rfind("ui.", 0) != 0)
@@ -376,14 +376,15 @@ struct Service::Impl {
         case 1: value.audio = defaults.audio; break;
         case 2: value.controls = defaults.controls; break;
         case 4: value.gameplay = defaults.gameplay; break;
-        default:
-            if (t.actions) {
-                for (u32 i = 0; i < t.actions->count(); ++i) t.actions->resetBinding(t.actions->id(i));
-                t.actions->saveUser();
-            }
-            break;
+        default: resetKeys(); break;
         }
         change();
+    }
+
+    void resetKeys() {
+        if (!t.actions) return;
+        for (u32 i = 0; i < t.actions->count(); ++i) t.actions->resetBinding(t.actions->id(i));
+        t.actions->saveUser();
     }
 
     void handle(const ui::Action& a) {
@@ -399,7 +400,7 @@ struct Service::Impl {
         } else if ((a.name == "settings.prev" || a.name == "settings.next") && index < rows.size()) {
             setChoice(rows[index], choiceIndex(rows[index]) + (a.name == "settings.next" ? 1 : -1));
         } else if (a.name == "settings.rebind" && index < rows.size() && rows[index].def.kind == RowKind::Key) {
-            rebinding = static_cast<i32>(index);
+            rebinding = rows[index].action;
         } else if (a.name == "settings.reset") {
             resetTab();
         } else if (a.name == "settings.keep") {
@@ -463,6 +464,19 @@ void Service::open() { m->openScreen(); }
 void Service::close() { m->closeScreen(); }
 bool Service::isOpen() const { return m->open; }
 
+std::vector<DisplaySize> Service::displaySizes() const { return m->t.window ? m->t.window->displaySizes() : std::vector<DisplaySize>{}; }
+bool Service::confirming() const { return m->confirming; }
+f64 Service::confirmSecondsLeft() const { return m->confirming ? m->confirmLeft : 0.0; }
+void Service::keep() { m->confirming = false; }
+void Service::revert() {
+    if (m->confirming) m->revert();
+}
+void Service::rebind(i32 action) {
+    m->rebinding = m->t.actions && action >= 0 && static_cast<u32>(action) < m->t.actions->count() ? action : -1;
+}
+i32 Service::rebindingAction() const { return m->rebinding; }
+void Service::resetKeys() { m->resetKeys(); }
+
 void Service::update(const Input* input, f64 dt) {
     if (m->t.ui) {
         for (const ui::Action& a : m->t.ui->actions()) {
@@ -475,13 +489,13 @@ void Service::update(const Input* input, f64 dt) {
         if (m->confirmLeft <= 0.0) m->revert(); // reverted if not confirmed
     }
     // Key rebinding: the next key pressed (Esc cancels)
-    if (m->rebinding >= 0 && input && m->t.actions && static_cast<size_t>(m->rebinding) < m->rows.size()) {
+    if (m->rebinding >= 0 && input && m->t.actions && static_cast<u32>(m->rebinding) < m->t.actions->count()) {
         for (u32 vk = 1; vk < 256; ++vk) {
             if (!input->keyPressed(static_cast<u8>(vk))) continue;
             if (vk == key::Escape || vk == key::Enter) break; // menu keys aren't rebound
             const char* name = input::keyName(static_cast<u8>(vk));
             if (!name) continue;
-            const u32 index = static_cast<u32>(m->rows[static_cast<size_t>(m->rebinding)].action);
+            const u32 index = static_cast<u32>(m->rebinding);
             input::Action b = m->t.actions->binding(index);
             b.keys = name;
             m->t.actions->setBinding(m->t.actions->id(index), b);
